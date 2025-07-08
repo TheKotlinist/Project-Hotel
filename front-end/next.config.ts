@@ -77,6 +77,34 @@ const nextConfig = {
         hostname: 'www.momondo.com',
         pathname: '/himg/**', // untuk URL spesifik
       },
+      {
+        protocol: 'https',
+        hostname: 'www.clubsereniamansion.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.appliedglobal.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dynamic-media-cdn.tripadvisor.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'happyplayindonesia.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'iefasemarang.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.roadtrippers.asia',
+      }
     ],
   },
 };

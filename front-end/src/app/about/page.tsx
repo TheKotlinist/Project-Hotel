@@ -74,21 +74,23 @@ const AboutUs = () => {
                     {/* Baris 1 - 3 orang */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center mb-10">
                         {[
-                            { name: 'Mikhael Adicahya K.', role: 'Founder & CEO' },
-                            { name: 'M. Raddya Fakhreza', role: 'Co-Founder' },
-                            { name: 'Zaky Muhammad', role: 'Hotel Manager' },
+                            { name: 'Hagi Salman Alfarizi', role: '50423557' },
+                            { name: 'Mikhael Adicahya Kurniawan', role: '50423774' },
+                            { name: 'Muhammad Raddya Fakhreza Muhammad', role: '50423970' },
                         ].map((member, index) => (
                             <MotionSection key={index} direction="up" stagger>
-                                <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-xs text-center mx-auto">
+                                <div className="bg-white rounded-2xl shadow-md p-6 w-full h-full min-h-[340px] text-center flex flex-col justify-between items-center">
                                     <Image
-                                        src="/images/foto1.jpg"
+                                        src="/images/image2.png"
                                         alt={member.name}
                                         width={200}
                                         height={200}
-                                        className="rounded-full mx-auto mb-4 object-cover"
+                                        className="rounded-full mb-4 object-cover aspect-square"
                                     />
-                                    <h4 className="text-xl font-semibold text-gray-800">{member.name}</h4>
-                                    <p className="text-gray-600">{member.role}</p>
+                                    <div>
+                                        <h4 className="text-xl font-semibold text-gray-800">{member.name}</h4>
+                                        <p className="text-gray-600">{member.role}</p>
+                                    </div>
                                 </div>
                             </MotionSection>
                         ))}
@@ -97,27 +99,30 @@ const AboutUs = () => {
                     {/* Baris 2 - 4 orang */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 justify-center">
                         {[
-                            { name: 'Naufal Dzikri', role: 'Marketing Manager' },
-                            { name: 'Farras Alfani', role: 'Hotel Supervisor' },
-                            { name: 'Shabrina Aulia', role: 'Creative Director' },
-                            { name: 'Kevin Prasetya', role: 'Guest Service Agent' },
+                            { name: 'Muhammad Rizqy Pangeran Winarko', role: '51423012' },
+                            { name: 'Ray Siraj', role: '51423248' },
+                            { name: 'Zaky Muhammad Sabakhtasyi', role: '51423497' },
+                            { name: 'Zulaikha Indria Desfiany', role: '51423509' },
                         ].map((member, index) => (
                             <MotionSection key={index} direction="up" stagger>
-                                <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-xs text-center mx-auto">
+                                <div className="bg-white rounded-2xl shadow-md p-6 w-full h-full min-h-[340px] text-center flex flex-col justify-between items-center">
                                     <Image
-                                        src="/images/foto1.jpg"
+                                        src="/images/image2.png"
                                         alt={member.name}
                                         width={200}
                                         height={200}
-                                        className="rounded-full mx-auto mb-4 object-cover"
+                                        className="rounded-full mb-4 object-cover aspect-square"
                                     />
-                                    <h4 className="text-xl font-semibold text-gray-800">{member.name}</h4>
-                                    <p className="text-gray-600">{member.role}</p>
+                                    <div>
+                                        <h4 className="text-xl font-semibold text-gray-800">{member.name}</h4>
+                                        <p className="text-gray-600">{member.role}</p>
+                                    </div>
                                 </div>
                             </MotionSection>
                         ))}
                     </div>
                 </div>
+
             </div>
         </section>
     );

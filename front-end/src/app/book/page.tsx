@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -28,6 +28,10 @@ export default function BookingPage() {
     const [isQRVisible, setIsQRVisible] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [isSending, setIsSending] = useState(false);
+
+    // Fungsi untuk format rupiah
+    const formatRupiah = (value: number) =>
+        new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value);
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -97,7 +101,7 @@ export default function BookingPage() {
             check_out: checkOutDate,
             total_nights: totalNights,
             guests,
-            total_price: totalPrice,
+            total_price: formatRupiah(totalPrice),
         };
 
         emailjs.send('service_alrynls', 'template_p3ibpub', templateParams, 'rciog2YI_QB8GYZVZ')
@@ -125,12 +129,12 @@ export default function BookingPage() {
                     <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Book Your Stay</h2>
                 </MotionSection>
 
+                {/* Card Pilihan Kamar */}
                 <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-20">
                     {rooms.map((room) => (
                         <MotionSection key={room.id} direction="up" stagger>
                             <div
-                                className={`rounded-3xl overflow-hidden shadow-lg transition duration-300 border ${roomType === room.id ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'
-                                    }`}
+                                className={`rounded-3xl overflow-hidden shadow-lg transition duration-300 border ${roomType === room.id ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'}`}
                             >
                                 <div className="relative w-full h-56">
                                     <Image src={room.image_url} alt={room.name} fill className="object-cover" />
@@ -139,12 +143,12 @@ export default function BookingPage() {
                                     <h3 className="text-xl font-semibold mb-2">{room.name}</h3>
                                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">{room.description.replace(/<br\s*\/?>/gi, ' ')}</p>
                                     <p className="text-blue-700 font-bold text-lg mb-4">
-                                        ${room.price.toLocaleString()} <span className="text-sm text-gray-500">/ night</span>
+                                        {formatRupiah(room.price)} <span className="text-sm text-gray-500">/ malam</span>
                                     </p>
                                     <button
                                         className={`px-6 py-2 rounded-lg font-semibold transition w-full ${roomType === room.id
-                                                ? 'bg-blue-700 text-white'
-                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            ? 'bg-blue-700 text-white'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
                                             }`}
                                         onClick={() => setRoomType(room.id)}
                                     >
@@ -155,7 +159,6 @@ export default function BookingPage() {
                         </MotionSection>
                     ))}
                 </div>
-
 
                 {/* Form Booking */}
                 <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-gray-100 p-10 rounded-2xl shadow-xl space-y-6">
@@ -188,11 +191,11 @@ export default function BookingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium mb-1">Total Nights</label>
-                            <input type="text" readOnly value={`${totalNights} night(s)`} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-600 cursor-not-allowed" />
+                            <input type="text" readOnly value={`${totalNights} malam`} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-600 cursor-not-allowed" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Total Price</label>
-                            <input type="text" readOnly value={`$${totalPrice.toLocaleString()}`} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-700 cursor-not-allowed" />
+                            <input type="text" readOnly value={formatRupiah(totalPrice)} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-700 cursor-not-allowed" />
                         </div>
                     </div>
 
@@ -201,7 +204,7 @@ export default function BookingPage() {
                     </button>
                 </form>
 
-                {/* QR MODAL */}
+                {/* QR Code Modal */}
                 <AnimatePresence>
                     {isQRVisible && (
                         <motion.div
@@ -235,14 +238,12 @@ export default function BookingPage() {
                                         Saya sudah bayar
                                     </button>
                                 )}
-
-
                             </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* SUCCESS MODAL */}
+                {/* Success Modal */}
                 <AnimatePresence>
                     {isConfirmed && (
                         <motion.div
@@ -259,7 +260,7 @@ export default function BookingPage() {
                             >
                                 <h3 className="text-xl font-bold text-green-700 mb-4">Booking Sukses!</h3>
                                 <p className="text-gray-700">
-                                    Terima kasih, {name}! Booking Anda untuk kamar <strong>{rooms.find((r) => r.id === roomType)?.name}</strong> dari{' '}
+                                    Terima kasih, {name}! Booking Anda untuk kamar <strong>{selectedRoom?.name}</strong> dari{' '}
                                     <strong>{checkInDate}</strong> sampai <strong>{checkOutDate}</strong> ({totalNights} malam) untuk {guests} tamu telah dikonfirmasi.
                                 </p>
                                 <button onClick={() => setIsConfirmed(false)} className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -269,7 +270,6 @@ export default function BookingPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
             </div>
         </section>
     );

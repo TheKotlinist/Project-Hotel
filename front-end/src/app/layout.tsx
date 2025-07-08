@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* === NAVBAR === */}
         <header className="bg-biru shadow-lg fixed w-full z-50 h-16">
           <div className="container mx-auto px-4 flex items-center justify-between h-full">
-            <div className="text-2xl font-bold text-white">SIGMA HOTEL</div>
+            <div className="text-2xl font-bold text-white">LUXURY STAY</div>
 
             {/* Desktop Menu */}
             <nav className="hidden md:flex items-center space-x-4 text-sm">
@@ -167,12 +167,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                   <h3 className="text-xl font-semibold mb-4">About Us</h3>
-                  <p className="text-sm text-gray-400">SIGMA Hotel is a luxurious destination offering top-notch comfort and service.</p>
+                  <p className="text-sm text-gray-400">LUXURY STAY is a luxurious destination offering top-notch comfort and service.</p>
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
                   <ul className="text-sm text-gray-400 space-y-2">
-                    <li>Email: info@schotel.com</li>
+                    <li>Email: LuxuryStay@Lgmail.com</li>
                     <li>Phone: +123 456 789</li>
                     <li>Address: 123 Hotel St, City, Country</li>
                   </ul>
@@ -188,7 +188,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
               <div className="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400">
-                &copy; 2024 SIGMA Hotel. All rights reserved.
+                &copy; 2025 LUXURY STAY. All rights reserved.
               </div>
             </div>
           </footer>
