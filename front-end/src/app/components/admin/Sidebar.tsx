@@ -1,6 +1,8 @@
 'use client';
 
 import { Dispatch, SetStateAction } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 type SortKey = 'created_at' | 'check_in' | 'check_out';
 
@@ -14,31 +16,48 @@ interface SidebarProps {
     uniqueRooms: string[];
 }
 
-export default function Sidebar({
-    filterThisWeek,
-    setFilterThisWeek,
-    filterRoom,
-    setFilterRoom,
-    sortBy,
-    setSortBy,
-    uniqueRooms,
-}: SidebarProps) {
+export default function Sidebar(
+    {
+        filterThisWeek,
+        setFilterThisWeek,
+        filterRoom,
+        setFilterRoom,
+        sortBy,
+        setSortBy,
+        uniqueRooms,
+    }: SidebarProps) {
+    const pathname = usePathname();
     return (
         <aside className="w-64 bg-white border-r border-gray-200 shadow-md min-h-screen sticky top-0">
             <div className="p-4">
                 <h2 className="text-xl font-bold text-blue-700 mb-4">Admin Menu</h2>
 
                 <nav className="space-y-2 text-sm">
-                    <a href="/admin/dashboard" className="block px-3 py-2 rounded hover:bg-blue-100 text-blue-700 font-medium">
+                    <Link
+                        href="/admin/dashboard"
+                        className={`block px-3 py-2 rounded transition ${pathname === '/admin/dashboard' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-blue-100 text-blue-700'
+                            }`}
+                    >
                         📊 Dashboard
-                    </a>
-                    <a href="/admin/rooms" className="block px-3 py-2 rounded hover:bg-blue-100">
+                    </Link>
+
+                    <Link
+                        href="/admin/rooms"
+                        className={`block px-3 py-2 rounded transition ${pathname === '/admin/rooms' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-blue-100 text-blue-700'
+                            }`}
+                    >
                         🏨 Manage Rooms
-                    </a>
-                    <a href="/admin/bookings" className="block px-3 py-2 rounded hover:bg-blue-100">
+                    </Link>
+
+                    <Link
+                        href="/admin/bookings"
+                        className={`block px-3 py-2 rounded transition ${pathname === '/admin/bookings' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-blue-100 text-blue-700'
+                            }`}
+                    >
                         📅 Manage Bookings
-                    </a>
+                    </Link>
                 </nav>
+
 
                 <div className="mt-6 border-t pt-4">
                     <h3 className="text-sm font-semibold text-gray-600 mb-3">📎 Filters</h3>

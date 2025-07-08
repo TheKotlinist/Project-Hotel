@@ -1,26 +1,83 @@
-// next.config.ts
-import { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
-    domains: [
-      'www.satoriahotel.com',
-      'example.com',
-      'images.unsplash.com',
-      'asset.olympicfurniture.co.id',
-      'victoriahotel.co.uk',
-      'www.pearlhotelnyc.com',
-      'https://www.momondo.com/himg/36/eb/50/expedia_group-356495-5dcc1200-828991.jpg',
-      'www.momondo.com',
-      's2.bukalapak.com',
-      'dbijapkm3o6fj.cloudfront.net',
-      'www.hotelmalaysia.com.my',
-      'hotelkristal.com',
-      'images.photowall.com',
-      'toohotel.com',
-      'media.easemytrip.com',
-      'api.qrserver.com',
-    ], // Add the domains where you're fetching images from
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3001',
+        pathname: '/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.satoriahotel.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'asset.olympicfurniture.co.id',
+      },
+      {
+        protocol: 'https',
+        hostname: 'victoriahotel.co.uk',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pearlhotelnyc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.momondo.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's2.bukalapak.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dbijapkm3o6fj.cloudfront.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.hotelmalaysia.com.my',
+      },
+      {
+        protocol: 'https',
+        hostname: 'hotelkristal.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.photowall.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'toohotel.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.easemytrip.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.qrserver.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.grid.id',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.momondo.com',
+        pathname: '/himg/**', // untuk URL spesifik
+      },
+    ],
   },
 };
 

@@ -2,7 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
@@ -35,6 +40,18 @@ type Facility struct {
 	Image       string `json:"image"`
 }
 
+type RoomUpdate struct {
+	Price int `json:"price"`
+}
+
+type Room struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageURL    string `json:"image_url"`
+	Price       int    `json:"price"`
+}
+
 // ===== DATABASE VAR =====
 
 var db *sql.DB
@@ -54,10 +71,12 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000", // frontend Next.js
+		AllowOrigins: "http://localhost:3000",
 		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowMethods: "GET, POST, DELETE",
+		AllowMethods: "GET, POST, PUT, DELETE",
 	}))
+
+	app.Static("/images", "./public/images")
 
 	// === Routes ===
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -68,12 +87,18 @@ func main() {
 	app.Post("/users", createUser)
 
 	app.Get("/rooms", getRooms)
+	app.Put("/rooms/:id", updateRoomPrice)
+	app.Delete("/rooms/:id", deleteRoom)
 
 	app.Get("/bookings", getAllBookings)
 	app.Post("/bookings", createBooking)
-	app.Delete("/bookings/:id", deleteBooking) // ✅ Tambahan endpoint DELETE
+	app.Delete("/bookings/:id", deleteBooking)
 
 	app.Get("/api/facilities", getFacilities)
+
+	app.Post("/rooms/upload", uploadRoomWithImage)
+
+	app.Post("/rooms", createRoom)
 
 	log.Println("Server running on http://localhost:3001")
 	log.Fatal(app.Listen(":3001"))
@@ -110,35 +135,79 @@ func createUser(c *fiber.Ctx) error {
 }
 
 func getRooms(c *fiber.Ctx) error {
-	rows, err := db.Query("SELECT id, name, price, capacity, stock, image_url, description FROM rooms")
+	rows, err := db.Query("SELECT id, name, price, image_url, description FROM rooms")
 	if err != nil {
-		return err
+		log.Println("Gagal query rooms:", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Gagal ambil data kamar",
+		})
 	}
 	defer rows.Close()
 
-	var rooms []map[string]interface{}
+	var rooms []Room
 	for rows.Next() {
-		var id, price, capacity, stock int
-		var name, imageURL, description string
-
-		err := rows.Scan(&id, &name, &price, &capacity, &stock, &imageURL, &description)
+		var r Room
+		err := rows.Scan(&r.ID, &r.Name, &r.Price, &r.ImageURL, &r.Description)
 		if err != nil {
-			return err
+			log.Println("Gagal scan room:", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Gagal parsing data kamar",
+			})
 		}
-
-		room := map[string]interface{}{
-			"id":          id,
-			"name":        name,
-			"price":       price,
-			"capacity":    capacity,
-			"stock":       stock,
-			"image_url":   imageURL,
-			"description": description,
-		}
-
-		rooms = append(rooms, room)
+		rooms = append(rooms, r)
 	}
+
 	return c.JSON(rooms)
+}
+
+func updateRoomPrice(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var payload RoomUpdate
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
+	}
+
+	_, err := db.Exec("UPDATE rooms SET price = ? WHERE id = ?", payload.Price, id)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal update harga kamar"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Harga kamar berhasil diupdate"})
+}
+
+func deleteRoom(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	// Ambil dulu path image dari DB
+	var imageURL string
+	err := db.QueryRow("SELECT image_url FROM rooms WHERE id = ?", id).Scan(&imageURL)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil data gambar"})
+	}
+
+	// Hapus record dari database
+	_, err = db.Exec("DELETE FROM rooms WHERE id = ?", id)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal hapus kamar"})
+	}
+
+	// Ambil nama file dari imageURL (misal: "http://localhost:3001/images/abc.jpg")
+	filename := filepath.Base(imageURL) // hasil: "abc.jpg"
+	relPath := filepath.Join("public/images", filename)
+	absPath, err := filepath.Abs(relPath)
+	if err != nil {
+		log.Println("❌ Gagal buat path absolut:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal buat path gambar"})
+	}
+
+	// Hapus file-nya
+	log.Println("🗑️ Menghapus file:", absPath)
+	if err := os.Remove(absPath); err != nil && !os.IsNotExist(err) {
+		log.Println("❌ Gagal hapus gambar:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Kamar dihapus, tapi gagal hapus gambar"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Kamar dan gambar berhasil dihapus"})
 }
 
 func createBooking(c *fiber.Ctx) error {
@@ -224,4 +293,72 @@ func getFacilities(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"facilities": facilities,
 	})
+}
+
+func createRoom(c *fiber.Ctx) error {
+	// ambil data text
+	name := c.FormValue("name")
+	description := c.FormValue("description")
+	priceStr := c.FormValue("price")
+	price, _ := strconv.Atoi(priceStr)
+
+	// ambil file
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Gagal ambil file"})
+	}
+
+	// Simpan file ke ./public/images/
+	imagePath := fmt.Sprintf("./public/images/%s", file.Filename)
+	if err := c.SaveFile(file, imagePath); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal simpan gambar"})
+	}
+
+	// Simpan ke DB, simpan path relative: /images/namafile.jpg
+	_, err = db.Exec(`INSERT INTO rooms (name, description, image_url, price) VALUES (?, ?, ?, ?)`,
+		name, description, "/images/"+file.Filename, price,
+	)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal simpan kamar"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Kamar berhasil ditambahkan"})
+}
+
+func uploadRoomWithImage(c *fiber.Ctx) error {
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Gambar tidak ditemukan"})
+	}
+
+	// Buat folder jika belum ada
+	uploadDir := "./public/images"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		os.MkdirAll(uploadDir, 0755)
+	}
+
+	// Gunakan nama unik agar tidak bentrok
+	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+	savePath := filepath.Join(uploadDir, filename)
+	if err := c.SaveFile(file, savePath); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal simpan gambar"})
+	}
+
+	// Simpan full URL ke database
+	imageURL := "http://localhost:3001/images/" + filename
+
+	// Ambil data lainnya
+	name := c.FormValue("name")
+	description := c.FormValue("description")
+	priceStr := c.FormValue("price")
+	price, _ := strconv.Atoi(priceStr)
+
+	// Simpan ke database
+	_, err = db.Exec(`INSERT INTO rooms (name, description, image_url, price) VALUES (?, ?, ?, ?)`,
+		name, description, imageURL, price)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal simpan kamar"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Kamar ditambahkan", "image_url": imageURL})
 }
