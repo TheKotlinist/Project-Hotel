@@ -7,42 +7,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MotionSection from '../components/MotionSection';
 
-const rooms = [
-    {
-        id: 'single',
-        name: 'Single Room',
-        price: 100,
-        description: 'A cozy room for one, with all essential amenities.',
-        image: 'https://www.satoriahotel.com/wp-content/uploads/2022/04/E.-Deluxe-Room-1-scaled-e1651111459463.jpg',
-    },
-    {
-        id: 'double',
-        name: 'Double Room',
-        price: 150,
-        description: 'Perfect for couples or friends, offering a comfortable stay.',
-        image: 'https://www.momondo.com/himg/36/eb/50/expedia_group-356495-5dcc1200-828991.jpg',
-    },
-    {
-        id: 'suite',
-        name: 'Suite',
-        price: 250,
-        description: 'Luxurious suite with extra space and premium amenities.',
-        image: 'https://s2.bukalapak.com/bukalapak-kontenz-production/content_attachments/75007/original/66013532_s.jpg',
-    },
-];
+interface Room {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    image_url: string;
+}
 
 export default function BookingPage() {
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [roomType, setRoomType] = useState<number>(0);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [guests, setGuests] = useState(1);
     const [checkInDate, setCheckInDate] = useState('');
     const [checkOutDate, setCheckOutDate] = useState('');
-    const [roomType, setRoomType] = useState('single');
     const [totalPrice, setTotalPrice] = useState(0);
     const [totalNights, setTotalNights] = useState(0);
     const [isQRVisible, setIsQRVisible] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [isSending, setIsSending] = useState(false);
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/rooms');
+                const data = await res.json();
+                setRooms(data);
+                setRoomType(data[0]?.id || 0);
+            } catch (error) {
+                console.error('Gagal ambil data kamar:', error);
+            }
+        };
+        fetchRooms();
+    }, []);
 
     useEffect(() => {
         const checkIn = new Date(checkInDate);
@@ -51,15 +50,15 @@ export default function BookingPage() {
         const nights = Math.ceil(diff / (1000 * 3600 * 24));
 
         if (nights > 0) {
-            const room = rooms.find((r) => r.id === roomType);
-            const price = room?.price || 0;
+            const selectedRoom = rooms.find((r) => r.id === roomType);
+            const price = selectedRoom?.price || 0;
             setTotalNights(nights);
             setTotalPrice(nights * price);
         } else {
             setTotalNights(0);
             setTotalPrice(0);
         }
-    }, [checkInDate, checkOutDate, roomType]);
+    }, [checkInDate, checkOutDate, roomType, rooms]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,7 +72,7 @@ export default function BookingPage() {
                     name,
                     email,
                     guests,
-                    room_id: roomType === 'single' ? 1 : roomType === 'double' ? 2 : 3,
+                    room_id: roomType,
                     check_in: checkInDate,
                     check_out: checkOutDate,
                 }),
@@ -88,10 +87,12 @@ export default function BookingPage() {
 
     const handleConfirmPayment = () => {
         setIsSending(true);
+        const selectedRoom = rooms.find((r) => r.id === roomType);
+
         const templateParams = {
             user_name: name,
             user_email: email,
-            room_type: rooms.find((r) => r.id === roomType)?.name || '',
+            room_type: selectedRoom?.name || '',
             check_in: checkInDate,
             check_out: checkOutDate,
             total_nights: totalNights,
@@ -99,23 +100,22 @@ export default function BookingPage() {
             total_price: totalPrice,
         };
 
-        emailjs.send(
-            'service_alrynls',
-            'template_p3ibpub',
-            templateParams,
-            'rciog2YI_QB8GYZVZ'
-        ).then(() => {
-            setIsQRVisible(false);
-            setIsConfirmed(true);
-        }).catch((error) => {
-            console.error('EmailJS Error:', error);
-            alert('Gagal mengirim email konfirmasi.');
-        }).finally(() => {
-            setIsSending(false);
-        });
+        emailjs.send('service_alrynls', 'template_p3ibpub', templateParams, 'rciog2YI_QB8GYZVZ')
+            .then(() => {
+                setIsQRVisible(false);
+                setIsConfirmed(true);
+            })
+            .catch((error) => {
+                console.error('EmailJS Error:', error);
+                alert('Gagal mengirim email konfirmasi.');
+            })
+            .finally(() => {
+                setIsSending(false);
+            });
     };
 
-    const qrContent = `booking://${name}-${roomType}-${checkInDate}-${checkOutDate}-${guests}`;
+    const selectedRoom = rooms.find((r) => r.id === roomType);
+    const qrContent = `booking://${name}-${selectedRoom?.name}-${checkInDate}-${checkOutDate}-${guests}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrContent)}`;
 
     return (
@@ -129,20 +129,26 @@ export default function BookingPage() {
                     {rooms.map((room) => (
                         <MotionSection key={room.id} direction="up" stagger>
                             <div
-                                className={`border rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${roomType === room.id ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'}`}
+                                className={`rounded-3xl overflow-hidden shadow-lg transition duration-300 border ${roomType === room.id ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'
+                                    }`}
                             >
-                                <div className="relative w-full h-60">
-                                    <Image src={room.image} alt={room.name} fill className="object-cover" />
+                                <div className="relative w-full h-56">
+                                    <Image src={room.image_url} alt={room.name} fill className="object-cover" />
                                 </div>
                                 <div className="p-6 text-center">
-                                    <h3 className="text-2xl font-semibold mb-2">{room.name}</h3>
-                                    <p className="text-gray-600 text-sm mb-2">{room.description}</p>
-                                    <p className="text-blue-700 font-bold text-lg mb-4">${room.price} / night</p>
+                                    <h3 className="text-xl font-semibold mb-2">{room.name}</h3>
+                                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{room.description.replace(/<br\s*\/?>/gi, ' ')}</p>
+                                    <p className="text-blue-700 font-bold text-lg mb-4">
+                                        ${room.price.toLocaleString()} <span className="text-sm text-gray-500">/ night</span>
+                                    </p>
                                     <button
-                                        className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+                                        className={`px-6 py-2 rounded-lg font-semibold transition w-full ${roomType === room.id
+                                                ? 'bg-blue-700 text-white'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            }`}
                                         onClick={() => setRoomType(room.id)}
                                     >
-                                        Select
+                                        {roomType === room.id ? 'Selected' : 'Select'}
                                     </button>
                                 </div>
                             </div>
@@ -150,10 +156,9 @@ export default function BookingPage() {
                     ))}
                 </div>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="max-w-2xl mx-auto bg-gray-100 p-10 rounded-2xl shadow-xl space-y-6"
-                >
+
+                {/* Form Booking */}
+                <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-gray-100 p-10 rounded-2xl shadow-xl space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium mb-1">Name</label>
@@ -187,7 +192,7 @@ export default function BookingPage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Total Price</label>
-                            <input type="text" readOnly value={`$${totalPrice}`} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-700 cursor-not-allowed" />
+                            <input type="text" readOnly value={`$${totalPrice.toLocaleString()}`} className="w-full px-4 py-2 rounded-lg border bg-gray-200 text-gray-700 cursor-not-allowed" />
                         </div>
                     </div>
 
